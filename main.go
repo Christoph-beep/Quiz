@@ -40,16 +40,9 @@ func main() {
 
 func process(w http.ResponseWriter, r *http.Request) {
 
-	// When is the open call required ?
-	//answers, err := os.Open("answers.txt")
-	//defer answers.Close()
-
 	answersContent, err := os.ReadFile("answerDirectory/answers.txt")
 	answersContentString := string(answersContent)
-	//if err != nil {
-	//	fmt.Println("An error occured in process")
-	//}
-	// answers from user
+
 	Question0 := r.FormValue("0")
 	Question1 := r.FormValue("1")
 
@@ -154,15 +147,38 @@ func answerFileWrite(solutions string) {
 		return
 	} else {
 		// answers do not exist so far and can therefore be added
+		var path = "answerDirectory/answers.txt"
 
-		err := os.WriteFile("answerDirectory/answers.txt", file, 0644)
-
+		fi, err := os.Stat("answerDirectory/answers.txt")
 		if err != nil {
-			fmt.Println("error occured in answerFileWrite")
-			fmt.Println(err)
-			return
+			fmt.Println("error occured, answerFileWrite", err)
 		}
-		fmt.Println("data has been successfuly written into file")
+		// get the size
+		size := fi.Size()
+
+		if size == 0 {
+			err2 := os.WriteFile(path, []byte(solutions), 0644)
+			if err2 != nil {
+				fmt.Println("error occured in answerFileWrite")
+				fmt.Println(err2)
+				return
+			}
+			fmt.Println("data has been successfuly written into file")
+		} else {
+			// text needs to be appended to prevent previous text from beeing deleted
+
+			f, err := os.OpenFile("answerDirectory/answers.txt",
+				os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				log.Println(err)
+			}
+			defer f.Close()
+			if _, err := f.WriteString(solutions); err != nil {
+				log.Println(err)
+			}
+			fmt.Println("data has been successfuly appended to the eixsting file")
+		}
+
 	}
 
 }
