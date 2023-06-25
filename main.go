@@ -41,7 +41,10 @@ func main() {
 func process(w http.ResponseWriter, r *http.Request) {
 
 	answersContent, err := os.ReadFile("answerDirectory/answers.txt")
-	answersContentString := string(answersContent)
+	if err != nil {
+		fmt.Println("error occured within the process function", err)
+	}
+	answersContentString := strings.ToLower(string(answersContent))
 
 	Question0 := r.FormValue("0")
 	Question1 := r.FormValue("1")
@@ -129,12 +132,13 @@ func createAnswerFile() bool {
 }
 
 // Writing solutions to file -> can only be done by admins, needs to be implimented
-func answerFileWrite(solutions string) {
+func answerFileWrite(newSolutions string) {
 	// reading part
 	// check, if data has already been written to the file, therefore the file needs to be opened first
 
 	file, err := os.ReadFile("answerDirectory/answers.txt")
-	fileContentString := string(file)
+	existingSolutions := string(file)
+	fmt.Println(existingSolutions + " these solutions do already exist")
 
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
@@ -142,7 +146,7 @@ func answerFileWrite(solutions string) {
 
 	// file information is stored here
 
-	if fileContentString == solutions {
+	if strings.Contains(existingSolutions, newSolutions) {
 		fmt.Println("the following answers do already exist, therefore they do not need to be eddited anymore")
 		return
 	} else {
@@ -157,7 +161,7 @@ func answerFileWrite(solutions string) {
 		size := fi.Size()
 
 		if size == 0 {
-			err2 := os.WriteFile(path, []byte(solutions), 0644)
+			err2 := os.WriteFile(path, []byte(newSolutions), 0644)
 			if err2 != nil {
 				fmt.Println("error occured in answerFileWrite")
 				fmt.Println(err2)
@@ -173,7 +177,7 @@ func answerFileWrite(solutions string) {
 				log.Println(err)
 			}
 			defer f.Close()
-			if _, err := f.WriteString(solutions); err != nil {
+			if _, err := f.WriteString(newSolutions); err != nil {
 				log.Println(err)
 			}
 			fmt.Println("data has been successfuly appended to the eixsting file")
